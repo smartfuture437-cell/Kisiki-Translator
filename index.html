@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kisiki | English ⇄ Kiswahili</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+  <meta name="theme-color" content="#0d2318"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-title" content="Kisiki"/>
+  <script>
+    const manifestData = {
+      name: "Kisiki Translator",
+      short_name: "Kisiki",
+      description: "Translate English to Kiswahili easily and fast",
+      start_url: "/",
+      display: "standalone",
+      background_color: "#0d2318",
+      theme_color: "#0d2318",
+      orientation: "portrait",
+      icons: [{ src: "https://api.iconify.design/twemoji:books.svg", sizes: "192x192", type: "image/svg+xml" }]
+    };
+    const blob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = URL.createObjectURL(blob);
+    document.head.appendChild(link);
+
+    if ('serviceWorker' in navigator) {
+      const swCode = `var CACHE='kisiki-v1';self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['/']))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));`;
+      const swBlob = new Blob([swCode], {type: 'application/javascript'});
+      window.addEventListener('load', () => navigator.serviceWorker.register(URL.createObjectURL(swBlob)));
+    }
+  </script>
+  <style>
+    :root {
+      --bg: #0d2318;
+      --surface: #163020;
+      --surface2: #1c3a28;
+      --accent: #e07b1f;
+      --accent2: #f59e3f;
+      --text: #e8f0ea;
+      --muted: #7a9e84;
+      --border: #254535;
+      --input-bg: #f5f0e8;
+      --input-text: #1a2e1f;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Pages ── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── Header ── */
+    .header {
+      background: var(--surface);
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo-box {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.8rem;
+      padding: 0.28rem 0.5rem;
+      border-radius: 6px;
+      letter-spacing: 0.04em;
+    }
+
+    .site-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem;
+      color: var(--text);
+    }
+
+    .lang-badge {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-left: 0.2rem;
+    }
+
+    .api-badge {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 0.85rem 0.5rem;
+      text-align: center;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+    }
+
+    .tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── Main ── */
+    .main { padding: 1.25rem; max-width: 640px; margin: 0 auto; }
+
+    /* ── Panel ── */
+    .panel {
+      background: var(--surface);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── Lang Selector ── */
+    .lang-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      background: var(--surface2);
+    }
+
+    .lang-select {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.55rem 0.85rem;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237a9e84' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 2rem;
+    }
+
+    .swap-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.55rem 1rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .swap-btn:hover { background: var(--accent2); }
+
+    /* ── Textarea ── */
+    .input-area {
+      padding: 1rem 1.25rem 0.5rem;
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--input-bg);
+      color: var(--input-text);
+      border: none;
+      border-radius: 10px;
+      padding: 1rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      resize: none;
+      min-height: 110px;
+      outline: none;
+      line-height: 1.6;
+    }
+
+    textarea::placeholder { color: #9aab9f; }
+
+    .char-count {
+      text-align: right;
+      font-size: 0.75rem;
+      color: var(--muted);
+      padding: 0.35rem 0.25rem 0.75rem;
+    }
+
+    /* ── Translate Button ── */
+    .translate-btn {
+      margin: 0 1.25rem 1.25rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.75rem 1.5rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background 0.2s;
+    }
+
+    .translate-btn:hover { background: var(--accent2); }
+    .translate-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ── Output ── */
+    .output-area {
+      background: var(--surface2);
+      border-top: 1px solid var(--border);
+      padding: 1rem 1.25rem;
+      min-height: 80px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .output-text {
+      font-size: 1rem;
+      color: var(--text);
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    .output-text.placeholder { color: var(--muted); font-style: italic; }
+
+    .copy-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.4rem 0.75rem;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      white-space: nowrap;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Footer note ── */
+    .footer-note {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.78rem;
+      padding: 0.5rem 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    /* ── Phrasebook / History panels ── */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .history-empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 2.5rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    .clear-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      padding: 0.4rem 0.85rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .clear-btn:hover { border-color: #e05f5f; color: #e05f5f; }
+
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .history-item {
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .history-item:hover { background: var(--surface2); }
+    .history-item:last-child { border-bottom: none; }
+
+    .history-item .from { color: var(--muted); font-size: 0.82rem; margin-bottom: 0.25rem; }
+    .history-item .to { color: var(--text); font-size: 0.95rem; }
+
+    /* ── Phrasebook ── */
+    .phrase-category { margin-bottom: 1rem; }
+
+    .phrase-cat-title {
+      padding: 0.75rem 1.25rem;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--accent);
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .phrase-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .phrase-item:hover { background: var(--surface2); }
+    .phrase-item:last-child { border-bottom: none; }
+
+    .phrase-en { color: var(--text); font-size: 0.9rem; }
+    .phrase-sw { color: var(--muted); font-size: 0.85rem; font-style: italic; }
+
+    /* ── About section ── */
+    .about {
+      background: var(--surface);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 1.5rem 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .about h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem;
+      margin-bottom: 0.75rem;
+      color: var(--text);
+    }
+
+    .about p { color: var(--muted); font-size: 0.9rem; line-height: 1.7; margin-bottom: 1rem; }
+
+    .about h3 {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.5rem;
+    }
+
+    .phrases-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .phrase-pill {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* ── Site Footer ── */
+    .site-footer {
+      text-align: center;
+      padding: 1.5rem 1rem 2rem;
+      border-top: 1px solid var(--border);
+      color: var(--border);
+      font-size: 0.8rem;
+    }
+
+    .site-footer a {
+      color: var(--muted);
+      text-decoration: none;
+      margin: 0 0.4rem;
+      cursor: pointer;
+    }
+
+    .site-footer a:hover { color: var(--accent); }
+
+    /* ── Loading ── */
+    .loading { display: inline-block; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ════════════════════════════════
+       PRIVACY POLICY PAGE STYLES
+       ════════════════════════════════ */
+    .privacy-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .back-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      padding: 0.4rem 0.85rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .privacy-content {
+      padding: 1.5rem 1.25rem 4rem;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .privacy-content h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+    }
+
+    .privacy-updated {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-bottom: 2rem;
+    }
+
+    .privacy-intro {
+      background: var(--surface);
+      border-left: 3px solid var(--accent);
+      padding: 1rem 1.25rem;
+      border-radius: 0 8px 8px 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+    }
+
+    .privacy-section {
+      margin-bottom: 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.4rem 1.25rem;
+    }
+
+    .privacy-section h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.2rem;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+    }
+
+    .privacy-section p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 0.6rem;
+      line-height: 1.75;
+    }
+
+    .privacy-section ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .privacy-section ul li {
+      color: var(--muted);
+      font-size: 0.95rem;
+      padding: 0.3rem 0 0.3rem 1.2rem;
+      position: relative;
+    }
+
+    .privacy-section ul li::before {
+      content: '›';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    .privacy-footer {
+      text-align: center;
+      color: var(--border);
+      font-size: 0.8rem;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════
+       PAGE 1: MAIN APP
+       ═══════════════════════════ -->
+  <div id="page-app" class="page active">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="logo-box">A⇄Z</div>
+      <span class="site-name">Kisiki</span>
+      <span class="lang-badge">| English ⇄ Kiswahili</span>
+      <div class="api-badge">
+        <span>ℹ️</span> MyMemory API
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('translate')">⇄ Translate</div>
+      <div class="tab" onclick="switchTab('phrasebook')">📖 Phrasebook</div>
+      <div class="tab" onclick="switchTab('history')">🕐 History</div>
+    </div>
+
+    <div class="main">
+
+      <!-- TRANSLATE TAB -->
+      <div id="tab-translate" class="tab-content active">
+        <div class="panel">
+          <!-- Language selectors -->
+          <div class="lang-row">
+            <select class="lang-select" id="sourceLang">
+              <option value="en">🇬🇧 English</option>
+              <option value="sw">🇹🇿 Kiswahili</option>
+            </select>
+            <button class="swap-btn" onclick="swapLangs()">⇄ Swap</button>
+            <select class="lang-select" id="targetLang">
+              <option value="sw">🇹🇿 Kiswahili</option>
+              <option value="en">🇬🇧 English</option>
+            </select>
+          </div>
+
+          <!-- Input -->
+          <div class="input-area">
+            <textarea id="inputText" placeholder="Enter text to translate... (English or Swahili)" oninput="updateCount()" onkeydown="handleKey(event)"></textarea>
+            <div class="char-count"><span id="charCount">0</span> characters</div>
+          </div>
+
+          <!-- Translate button -->
+          <button class="translate-btn" id="translateBtn" onclick="doTranslate()">
+            🤖 Translate
+          </button>
+
+          <!-- Output -->
+          <div class="output-area">
+            <div class="output-text placeholder" id="outputText">— translation will appear here —</div>
+            <button class="copy-btn" onclick="copyOutput()">📋 Copy</button>
+          </div>
+        </div>
+
+        <div class="footer-note">🔔 Real-time MyMemory API • Swahili wisdom</div>
+      </div>
+
+      <!-- PHRASEBOOK TAB -->
+      <div id="tab-phrasebook" class="tab-content">
+        <div class="panel">
+          <div class="phrase-category">
+            <div class="phrase-cat-title">Greetings</div>
+            <div class="phrase-item" onclick="usePhrase('Hello','Habari')"><span class="phrase-en">Hello</span><span class="phrase-sw">Habari</span></div>
+            <div class="phrase-item" onclick="usePhrase('Good morning','Habari za asubuhi')"><span class="phrase-en">Good morning</span><span class="phrase-sw">Habari za asubuhi</span></div>
+            <div class="phrase-item" onclick="usePhrase('Good evening','Habari za jioni')"><span class="phrase-en">Good evening</span><span class="phrase-sw">Habari za jioni</span></div>
+            <div class="phrase-item" onclick="usePhrase('How are you?','Habari yako?')"><span class="phrase-en">How are you?</span><span class="phrase-sw">Habari yako?</span></div>
+            <div class="phrase-item" onclick="usePhrase('Welcome','Karibu')"><span class="phrase-en">Welcome</span><span class="phrase-sw">Karibu</span></div>
+            <div class="phrase-item" onclick="usePhrase('Goodbye','Kwa heri')"><span class="phrase-en">Goodbye</span><span class="phrase-sw">Kwa heri</span></div>
+          </div>
+          <div class="phrase-category">
+            <div class="phrase-cat-title">Courtesy</div>
+            <div class="phrase-item" onclick="usePhrase('Thank you','Asante')"><span class="phrase-en">Thank you</span><span class="phrase-sw">Asante</span></div>
+            <div class="phrase-item" onclick="usePhrase('Please','Tafadhali')"><span class="phrase-en">Please</span><span class="phrase-sw">Tafadhali</span></div>
+            <div class="phrase-item" onclick="usePhrase('Sorry','Samahani')"><span class="phrase-en">Sorry</span><span class="phrase-sw">Samahani</span></div>
+            <div class="phrase-item" onclick="usePhrase('Yes','Ndiyo')"><span class="phrase-en">Yes</span><span class="phrase-sw">Ndiyo</span></div>
+            <div class="phrase-item" onclick="usePhrase('No','Hapana')"><span class="phrase-en">No</span><span class="phrase-sw">Hapana</span></div>
+          </div>
+          <div class="phrase-category">
+            <div class="phrase-cat-title">Common Phrases</div>
+            <div class="phrase-item" onclick="usePhrase('I don\'t understand','Sielewi')"><span class="phrase-en">I don't understand</span><span class="phrase-sw">Sielewi</span></div>
+            <div class="phrase-item" onclick="usePhrase('What is your name?','Jina lako nani?')"><span class="phrase-en">What is your name?</span><span class="phrase-sw">Jina lako nani?</span></div>
+            <div class="phrase-item" onclick="usePhrase('My name is...','Jina langu ni...')"><span class="phrase-en">My name is...</span><span class="phrase-sw">Jina langu ni...</span></div>
+            <div class="phrase-item" onclick="usePhrase('Where is...?','...iko wapi?')"><span class="phrase-en">Where is...?</span><span class="phrase-sw">...iko wapi?</span></div>
+            <div class="phrase-item" onclick="usePhrase('How much?','Bei gani?')"><span class="phrase-en">How much?</span><span class="phrase-sw">Bei gani?</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISTORY TAB -->
+      <div id="tab-history" class="tab-content">
+        <div class="panel">
+          <div class="history-header">
+            Translation history
+            <button class="clear-btn" onclick="clearHistory()">Clear all</button>
+          </div>
+          <div id="historyList">
+            <div class="history-empty">No translations yet. Start translating!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- About -->
+      <div class="about">
+        <h2>About Kisiki Translator</h2>
+        <p>Kisiki is a free online English to Kiswahili translator. Simply type any English word or sentence and get an instant Kiswahili translation. No download required.</p>
+
+        <h3>Who is this for?</h3>
+        <p>This tool is perfect for students, teachers, travellers, and anyone learning Kiswahili across East Africa including Uganda, Kenya, Tanzania, and Rwanda.</p>
+
+        <h3>Common Swahili Phrases</h3>
+        <div class="phrases-grid">
+          <span class="phrase-pill">Hello = Habari</span>
+          <span class="phrase-pill">Thank you = Asante</span>
+          <span class="phrase-pill">How are you = Habari yako</span>
+          <span class="phrase-pill">Good morning = Habari za asubuhi</span>
+          <span class="phrase-pill">Welcome = Karibu</span>
+          <span class="phrase-pill">Goodbye = Kwa heri</span>
+        </div>
+
+        <h3>Contact</h3>
+        <p>For feedback or support, email us at: <a href="mailto:smartfuture437@gmail.com" style="color:var(--accent)">smartfuture437@gmail.com</a></p>
+      </div>
+
+    </div><!-- /main -->
+
+    <!-- Site Footer -->
+    <div class="site-footer">
+      <div style="margin-bottom:0.5rem">
+        <a onclick="showPage('privacy')">Privacy Policy</a> ·
+        <a href="mailto:smartfuture437@gmail.com">Contact</a>
+      </div>
+      © 2026 Kisiki Translator · english-to-swahili.netlify.app
+    </div>
+
+  </div><!-- /page-app -->
+
+
+  <!-- ═══════════════════════════
+       PAGE 2: PRIVACY POLICY
+       ═══════════════════════════ -->
+  <div id="page-privacy" class="page">
+
+    <div class="privacy-header">
+      <button class="back-btn" onclick="showPage('app')">← Back</button>
+      <div class="logo-box">A⇄Z</div>
+      <span class="site-name">Kisiki</span>
+    </div>
+
+    <div class="privacy-content">
+      <h1>Privacy Policy</h1>
+      <p class="privacy-updated">Last updated: April 2026</p>
+
+      <div class="privacy-intro">
+        Kisiki is a free translation tool. We believe in being transparent about how the app works and what (very little) data is involved.
+      </div>
+
+      <div class="privacy-section">
+        <h2>1. Who We Are</h2>
+        <p>Kisiki Translator is a free online tool that helps users translate between English and Kiswahili. It is operated as a personal project and is not affiliated with any company.</p>
+        <p>For questions, contact us at: <a href="mailto:smartfuture437@gmail.com" style="color:var(--accent)">smartfuture437@gmail.com</a></p>
+      </div>
+
+      <div class="privacy-section">
+        <h2>2. Information We Do Not Collect</h2>
+        <p>Kisiki does not collect, store, or share your personal information. Specifically, we do not:</p>
+        <ul>
+          <li>Require you to create an account or log in</li>
+          <li>Store the text you enter for translation</li>
+          <li>Collect your name, email address, or location</li>
+          <li>Sell or share any data with third parties</li>
+        </ul>
+      </div>
+
+      <div class="privacy-section">
+        <h2>3. Third-Party Translation API</h2>
+        <p>Kisiki uses the <strong>MyMemory API</strong> to process translations. When you click "Translate", your input text is sent to MyMemory's servers to retrieve the translation result.</p>
+        <p>MyMemory may collect usage data in accordance with their own privacy policy. We encourage you to review it at <a href="https://mymemory.translated.net" target="_blank" style="color:var(--accent)">mymemory.translated.net</a>.</p>
+        <p>We recommend you avoid entering sensitive or personal information in the translation box.</p>
+      </div>
+
+      <div class="privacy-section">
+        <h2>4. Cookies & Local Storage</h2>
+        <p>Kisiki may use your browser's local storage to save translation history for your convenience. This data:</p>
+        <ul>
+          <li>Is stored only on your own device</li>
+          <li>Is never sent to our servers</li>
+          <li>Can be cleared at any time by clearing your browser's site data</li>
+        </ul>
+        <p>We do not use advertising or tracking cookies.</p>
+      </div>
+
+      <div class="privacy-section">
+        <h2>5. Analytics</h2>
+        <p>We may use basic analytics tools (such as those provided by Netlify or Google Analytics) to understand how many people visit the site and which features are used. This data is anonymous and used only to improve the app.</p>
+      </div>
+
+      <div class="privacy-section">
+        <h2>6. Children's Privacy</h2>
+        <p>Kisiki is suitable for users of all ages, including students and learners. We do not knowingly collect any personal data from children under the age of 13.</p>
+      </div>
+
+      <div class="privacy-section">
+        <h2>7. Changes to This Policy</h2>
+        <p>We may update this privacy policy from time to time. Any changes will be posted on this page with a new "Last updated" date. Continued use of the site after changes means you accept the updated policy.</p>
+      </div>
+
+      <div class="privacy-section">
+        <h2>8. Contact Us</h2>
+        <p>If you have any questions or concerns about this privacy policy, please reach out:</p>
+        <p>📧 <a href="mailto:smartfuture437@gmail.com" style="color:var(--accent)">smartfuture437@gmail.com</a></p>
+      </div>
+
+      <div class="privacy-footer">
+        © 2026 Kisiki Translator · English ⇄ Kiswahili · english-to-swahili.netlify.app
+      </div>
+    </div>
+
+  </div><!-- /page-privacy -->
+
+
+  <script>
+    /* ══════════════════════════════════════
+       PAGE NAVIGATION
+       ══════════════════════════════════════ */
+    function showPage(name) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById('page-' + name).classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    /* ══════════════════════════════════════
+       TRANSLATION HISTORY
+       ✅ FIX: Renamed from 'history' to
+       'translationHistory' to avoid conflict
+       with the browser's built-in
+       window.history object.
+       ══════════════════════════════════════ */
+    let translationHistory = JSON.parse(localStorage.getItem('kisiki_history') || '[]');
+
+    /* ══════════════════════════════════════
+       TAB SWITCHING
+       ══════════════════════════════════════ */
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach((t, i) => {
+        t.classList.toggle('active', ['translate', 'phrasebook', 'history'][i] === tab);
+      });
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      if (tab === 'history') renderHistory();
+    }
+
+    /* ══════════════════════════════════════
+       CHARACTER COUNTER
+       ══════════════════════════════════════ */
+    function updateCount() {
+      const val = document.getElementById('inputText').value;
+      document.getElementById('charCount').textContent = val.length;
+    }
+
+    /* ══════════════════════════════════════
+       ENTER KEY TO TRANSLATE
+       ══════════════════════════════════════ */
+    function handleKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doTranslate(); }
+    }
+
+    /* ══════════════════════════════════════
+       SWAP LANGUAGES
+       ══════════════════════════════════════ */
+    function swapLangs() {
+      const src = document.getElementById('sourceLang');
+      const tgt = document.getElementById('targetLang');
+      const tmp = src.value;
+      src.value = tgt.value;
+      tgt.value = tmp;
+
+      const outEl = document.getElementById('outputText');
+      const inputEl = document.getElementById('inputText');
+      if (!outEl.classList.contains('placeholder')) {
+        const outText = outEl.textContent;
+        inputEl.value = outText;
+        outEl.textContent = '— translation will appear here —';
+        outEl.classList.add('placeholder');
+        updateCount();
+      }
+    }
+
+    /* ══════════════════════════════════════
+       TRANSLATE FUNCTION
+       ✅ FIX: Renamed from 'translate()' to
+       'doTranslate()' because 'translate' is
+       also a reserved CSS/browser keyword
+       that can cause conflicts.
+       ══════════════════════════════════════ */
+    async function doTranslate() {
+      const text = document.getElementById('inputText').value.trim();
+      if (!text) return;
+
+      const src = document.getElementById('sourceLang').value;
+      const tgt = document.getElementById('targetLang').value;
+
+      const btn = document.getElementById('translateBtn');
+      const outEl = document.getElementById('outputText');
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading">⏳</span> Translating...';
+      outEl.textContent = 'Translating...';
+      outEl.classList.add('placeholder');
+
+      try {
+        const langPair = `${src}|${tgt}`;
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const translated = data.responseData?.translatedText || 'Translation not available.';
+
+        outEl.textContent = translated;
+        outEl.classList.remove('placeholder');
+
+        // Save to history
+        translationHistory.unshift({ from: text, to: translated, src, tgt, time: Date.now() });
+        if (translationHistory.length > 50) translationHistory.pop();
+        localStorage.setItem('kisiki_history', JSON.stringify(translationHistory));
+
+      } catch (err) {
+        outEl.textContent = 'Error: Could not connect. Please check your internet connection.';
+        outEl.classList.remove('placeholder');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '🤖 Translate';
+      }
+    }
+
+    /* ══════════════════════════════════════
+       COPY OUTPUT
+       ══════════════════════════════════════ */
+    function copyOutput() {
+      const outEl = document.getElementById('outputText');
+      if (outEl.classList.contains('placeholder')) return;
+      navigator.clipboard.writeText(outEl.textContent).then(() => {
+        const btn = document.querySelector('.copy-btn');
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => btn.innerHTML = '📋 Copy', 1500);
+      });
+    }
+
+    /* ══════════════════════════════════════
+       USE PHRASE FROM PHRASEBOOK
+       ══════════════════════════════════════ */
+    function usePhrase(en, sw) {
+      document.getElementById('inputText').value = en;
+      updateCount();
+      document.getElementById('outputText').textContent = sw;
+      document.getElementById('outputText').classList.remove('placeholder');
+      switchTab('translate');
+    }
+
+    /* ══════════════════════════════════════
+       RENDER HISTORY LIST
+       ══════════════════════════════════════ */
+    function renderHistory() {
+      const el = document.getElementById('historyList');
+      if (!translationHistory.length) {
+        el.innerHTML = '<div class="history-empty">No translations yet. Start translating!</div>';
+        return;
+      }
+      el.innerHTML = translationHistory.map(h => `
+        <div class="history-item" onclick="loadFromHistory('${encodeURIComponent(h.from)}','${encodeURIComponent(h.to)}','${h.src}','${h.tgt}')">
+          <div class="from">${h.from}</div>
+          <div class="to">${h.to}</div>
+        </div>
+      `).join('');
+    }
+
+    /* ══════════════════════════════════════
+       LOAD FROM HISTORY
+       ══════════════════════════════════════ */
+    function loadFromHistory(from, to, src, tgt) {
+      document.getElementById('inputText').value = decodeURIComponent(from);
+      document.getElementById('outputText').textContent = decodeURIComponent(to);
+      document.getElementById('outputText').classList.remove('placeholder');
+      document.getElementById('sourceLang').value = src;
+      document.getElementById('targetLang').value = tgt;
+      updateCount();
+      switchTab('translate');
+    }
+
+    /* ══════════════════════════════════════
+       CLEAR HISTORY
+       ══════════════════════════════════════ */
+    function clearHistory() {
+      if (confirm('Clear all translation history?')) {
+        translationHistory = [];
+        localStorage.removeItem('kisiki_history');
+        renderHistory();
+      }
+    }
+  </script>
+
+</body>
+</html>
